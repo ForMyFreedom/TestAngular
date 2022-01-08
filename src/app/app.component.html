@@ -1,5 +1,8 @@
 <app-start></app-start>
 
-<p *ngFor="let character of data | async">
-  {{character | json}}
-</p>
+<div *ngFor="let character of data | async">
+  <img src={{character.thumbnail.path}}.{{character.thumbnail.extension}} alt="{{character.name}}">
+  <h2>{{character.name}}</h2>
+  <br />
+</div>
+
