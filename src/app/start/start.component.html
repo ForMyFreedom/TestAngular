@@ -1,2 +1,11 @@
 <h1> Marvel Quiz </h1>
-<button (click)="on_click()"> Iniciar </button>
+<div *ngIf="!gameStart">
+  <button (click)="on_click()"> Iniciar </button>
+</div>
+
+<div *ngIf="gameStart">
+  <img src={{characters[sortedCharacter].thumbnail.path}}.{{characters[sortedCharacter].thumbnail.extension}} alt="{{characters[sortedCharacter].name}}">
+  <div *ngFor='let in of counter(4) ;let i = index'>
+    <button>{{characters[i].name}}</button>
+  </div>
+</div>
