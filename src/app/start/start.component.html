@@ -1,6 +1,6 @@
 <h1> Marvel Quiz </h1>
 <div *ngIf="!gameStart">
-  <button (click)="start()"> Iniciar </button>
+  <button class="button" (click)="start()"> Iniciar </button>
 </div>
 
 
@@ -8,13 +8,16 @@
   <h2>Pontos: {{points}}/{{GOAL}}</h2>
   <img src={{characters[sortedCharacter].thumbnail.path}}.{{characters[sortedCharacter].thumbnail.extension}} alt="{{characters[sortedCharacter].name}}">
   <div *ngFor='let in of counter(4) ;let i = index'>
-    <button (click)="choose_character(i)">{{characters[i].name}}</button>
+    <div>
+      <button [ngClass]="(choosenId==-1)?'button':(sortedCharacter==i)?'button green_button':'button red_button'"
+              (click)="choose_character(i)">{{characters[i].name}}
+      </button>
+    </div>
   </div>
 </div>
-<br />
 
 
-<div *ngIf="answerMade && gameStart">
+<div *ngIf="answerWasMade && gameStart">
   <h2>{{answerResponse}}</h2>
-  <button (click)="start()"> Próximo </button>
+  <button class="button" (click)="start()"> Próximo </button>
 </div>

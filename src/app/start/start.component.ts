@@ -19,9 +19,10 @@ export class StartComponent implements OnInit {
   user: CharactersApiService;
   points: number = 0;
   trys: number = 0;
+  choosenId: number = -1;
 
   gameStart: boolean = false;
-  answerMade: boolean = false;
+  answerWasMade: boolean = false;
   answerResponse: string = "";
 
   GOAL = 3;
@@ -51,7 +52,7 @@ export class StartComponent implements OnInit {
     this.points = 0;
     this.trys = 0;
     this.gameStart = false;
-    this.answerMade = false;
+    this.answerWasMade = false;
     this.answerResponse = "";
   }
 
@@ -66,7 +67,8 @@ export class StartComponent implements OnInit {
       return;
     }
 
-    this.answerMade = false;
+    this.choosenId = -1;
+    this.answerWasMade = false;
     this.getSuficientData();
     this.characters = this.selectAmountOfCharacters(4);
     this.sortedCharacter = this.getRandomNumber(4);
@@ -75,9 +77,9 @@ export class StartComponent implements OnInit {
   }
 
   choose_character(id: number): void {
-    if (this.answerMade == true) return;
-
-    this.answerMade = true;
+    if (this.answerWasMade == true) return;
+    this.choosenId = id;
+    this.answerWasMade = true;
     this.trys++;
 
     if (id == this.sortedCharacter) {
