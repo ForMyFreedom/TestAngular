@@ -24,30 +24,24 @@ export class StartComponent implements OnInit {
   answerMade: boolean = false;
   answerResponse: string = "";
 
-  GOAL = 2;
+  GOAL = 3;
   ALPHABET = "abcdefghijklmnopqrstuvwxyz";
   ORDERS = ["", "-"];
-<<<<<<< Updated upstream
-=======
   DEFAULT_BLOCK = "http://i.annihil.us/u/prod/marvel/i/mg/";
   BLOCKED_URIS = ["b/40/image_not_available", "c/e0/4ce59d3a80ff7", "i/mg/6/10/4c003937c9ba4", "i/mg/6/50/4dd531d26079c", "i/mg/6/60/535febc427605", "i/mg/b/c0/52b0d25c3dbb9", "i/mg/6/b0/4ed7bd3756650"];
   //BLOCKED_URIS IS A TEMPORARY SOLUCTION [Issue #1]
->>>>>>> Stashed changes
 
   constructor(private _user: CharactersApiService) {
     this.user = _user;
     this.data = Data.prototype;
-<<<<<<< Updated upstream
     this.characterIdsList = [];
     this.sortedCharacter = 0;
     this.characters = [];
     this.gameStart = false;
-=======
 
     for (let i = 0; i < this.BLOCKED_URIS.length; i++) {
       this.BLOCKED_URIS[i] = this.DEFAULT_BLOCK + this.BLOCKED_URIS[i];
     }
->>>>>>> Stashed changes
   }
 
   startData() {
