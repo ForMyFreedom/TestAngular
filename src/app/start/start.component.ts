@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {CharactersApiService} from '../service/characters-api.service'
+import { CharactersApiService} from '../service/characters-api.service'
 import { combineAll, Observable, EMPTY, empty, of, combineLatest, toArray, take } from 'rxjs';
 import { Character } from '../models/character.model';
 import { Data } from '../models/data.model';
@@ -28,10 +28,8 @@ export class StartComponent implements OnInit {
   GOAL = 3;
   ALPHABET = "abcdefghijklmnopqrstuvwxyz";
   ORDERS = ["", "-"];
-  DEFAULT_BLOCK = "http://i.annihil.us/u/prod/marvel/i/mg/";
-  BLOCKED_URIS = ["b/40/image_not_available", "c/e0/4ce59d3a80ff7", "i/mg/6/10/4c003937c9ba4", "i/mg/6/50/4dd531d26079c", "i/mg/6/60/535febc427605", "i/mg/b/c0/52b0d25c3dbb9", "i/mg/6/b0/4ed7bd3756650"];
-  //BLOCKED_URIS IS A TEMPORARY SOLUCTION [Issue #1]
-
+  DEFAULT_IMAGE_URL = "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available";
+  
   constructor(private _user: CharactersApiService) {
     this.user = _user;
     this.data = Data.prototype;
@@ -40,9 +38,6 @@ export class StartComponent implements OnInit {
     this.characters = [];
     this.gameStart = false;
 
-    for (let i = 0; i < this.BLOCKED_URIS.length; i++) {
-      this.BLOCKED_URIS[i] = this.DEFAULT_BLOCK + this.BLOCKED_URIS[i];
-    }
   }
 
   startData() {
@@ -70,8 +65,8 @@ export class StartComponent implements OnInit {
     this.choosenId = -1;
     this.answerWasMade = false;
     this.getSuficientData();
-    this.characters = this.selectAmountOfCharacters(4);
     this.sortedCharacter = this.getRandomNumber(4);
+    this.characters = this.selectAmountOfCharacters(4);
     this.gameStart = true;
 
   }
@@ -107,21 +102,37 @@ export class StartComponent implements OnInit {
     //make it suficient
   }
 
+
   selectAmountOfCharacters(quant: number) : Character[] {
     var length: number = this.data.count;
-
-    var allIds: Character[] = [];
+    var charList: Character[] = [];
     for (let i = 0; i < this.characters.length; i++) {
-      allIds[i] = this.data.results[i];
+      charList[i] = this.data.results[i];
     }
 
-    allIds = this.shuffle(allIds);
-    allIds = allIds.slice(0, 4);
+    do {
+      charList = this.shuffle(charList);
+      charList = charList.slice(0, 4);
+    } while (this.thumbnailIsDefault(charList[this.sortedCharacter]));
 
-    return allIds;
+    return charList;
   }
 
 
+
+  thumbnailIsDefault(character: Character): boolean {
+    if (character.thumbnail.path == "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available") {
+      return true;
+    } else {
+      return false;
+    }
+    /**
+    if (imageLocation.pathname == this.DEFAULT_IMAGE_URL)
+      return true;
+    else
+      return false;
+    **/
+  }
 
   getRandomChar(): string {
     return this.ALPHABET[this.getRandomNumber(this.ALPHABET.length)];
@@ -147,6 +158,19 @@ export class StartComponent implements OnInit {
     return new Array(i);
   }
 
+
+  getBase64Image(img: any) {
+    var canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    var ctx = canvas.getContext("2d");
+    if (ctx == null) return;
+    ctx.drawImage(img, 0, 0);
+
+    var dataURL = canvas.toDataURL("image/png");
+    return dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+  }
 
   /*
       while (this.size < 20 && safe < 5) {
