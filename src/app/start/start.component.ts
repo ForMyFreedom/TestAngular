@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CharactersApiService} from '../service/characters-api.service'
-import { DownloadImageService} from '../service/download-image.service'
 import { combineAll, Observable, EMPTY, empty, of, combineLatest, toArray, take } from 'rxjs';
 import { Character } from '../models/character.model';
 import { Data } from '../models/data.model';
@@ -18,7 +17,6 @@ export class StartComponent implements OnInit {
   sortedCharacter: number = 0;
   characterIdsList: number[] = [];
   user: CharactersApiService;
-  download: DownloadImageService;
   points: number = 0;
   trys: number = 0;
   choosenId: number = -1;
@@ -30,27 +28,16 @@ export class StartComponent implements OnInit {
   GOAL = 3;
   ALPHABET = "abcdefghijklmnopqrstuvwxyz";
   ORDERS = ["", "-"];
-  DEFAULT_BLOCK = "http://i.annihil.us/u/prod/marvel/i/mg/";
-  BLOCKED_URIS = ["b/40/image_not_available", "c/e0/4ce59d3a80ff7", "i/mg/6/10/4c003937c9ba4", "i/mg/6/50/4dd531d26079c", "i/mg/6/60/535febc427605", "i/mg/b/c0/52b0d25c3dbb9", "i/mg/6/b0/4ed7bd3756650"];
-
-  DEFAULT_IMAGE = new Image();
-  BASE_FOR_DEFAULT_IMAGE;
+  DEFAULT_IMAGE_URL = "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available";
   
-  constructor(private _user: CharactersApiService, private _download: DownloadImageService) {
+  constructor(private _user: CharactersApiService) {
     this.user = _user;
-    this.download = _download;
     this.data = Data.prototype;
     this.characterIdsList = [];
     this.sortedCharacter = 0;
     this.characters = [];
     this.gameStart = false;
 
-    this.DEFAULT_IMAGE.src = '../../assets/default_image.jpg';
-    this.BASE_FOR_DEFAULT_IMAGE = this.getBase64Image(this.DEFAULT_IMAGE);
-
-    for (let i = 0; i < this.BLOCKED_URIS.length; i++) {
-      this.BLOCKED_URIS[i] = this.DEFAULT_BLOCK + this.BLOCKED_URIS[i];
-    }
   }
 
   startData() {
@@ -78,8 +65,8 @@ export class StartComponent implements OnInit {
     this.choosenId = -1;
     this.answerWasMade = false;
     this.getSuficientData();
-    this.characters = this.selectAmountOfCharacters(4);
     this.sortedCharacter = this.getRandomNumber(4);
+    this.characters = this.selectAmountOfCharacters(4);
     this.gameStart = true;
 
   }
@@ -118,35 +105,33 @@ export class StartComponent implements OnInit {
 
   selectAmountOfCharacters(quant: number) : Character[] {
     var length: number = this.data.count;
-
     var charList: Character[] = [];
     for (let i = 0; i < this.characters.length; i++) {
       charList[i] = this.data.results[i];
     }
-    /**
+
     do {
       charList = this.shuffle(charList);
       charList = charList.slice(0, 4);
     } while (this.thumbnailIsDefault(charList[this.sortedCharacter]));
-    **/
-
-    charList = this.shuffle(charList);
-    charList = charList.slice(0, 4);
-    this.thumbnailIsDefault(charList[this.sortedCharacter]);
 
     return charList;
   }
 
 
+
   thumbnailIsDefault(character: Character): boolean {
-    let charThumb = this.download.downloadImage(character.thumbnail.path + "." + character.thumbnail.extension)
-    let charBase64 = this.getBase64Image(charThumb);
-
-    console.log(charBase64);
-    console.log(this.BASE_FOR_DEFAULT_IMAGE);
-    console.log(charBase64 == this.BASE_FOR_DEFAULT_IMAGE);
-
-    return charBase64 == this.BASE_FOR_DEFAULT_IMAGE;
+    if (character.thumbnail.path == "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available") {
+      return true;
+    } else {
+      return false;
+    }
+    /**
+    if (imageLocation.pathname == this.DEFAULT_IMAGE_URL)
+      return true;
+    else
+      return false;
+    **/
   }
 
   getRandomChar(): string {
