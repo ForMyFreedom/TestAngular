@@ -12,11 +12,10 @@ import { Output, EventEmitter } from '@angular/core';
 })
 export class StartComponent implements OnInit {
 
+  charApi: CharactersApiService;
   data: Data;
   characters: Character[] = [];
-  sortedCharacter: number = 0;
-  characterIdsList: number[] = [];
-  user: CharactersApiService;
+  sortedCharacter: number;
   points: number = 0;
   trys: number = 0;
   choosenId: number = -1;
@@ -30,20 +29,18 @@ export class StartComponent implements OnInit {
   ORDERS = ["", "-"];
   DEFAULT_IMAGE_URL = "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available";
   
-  constructor(private _user: CharactersApiService) {
-    this.user = _user;
+  constructor(private _charApi: CharactersApiService) {
+    this.charApi = _charApi;
     this.data = Data.prototype;
-    this.characterIdsList = [];
     this.sortedCharacter = 0;
     this.characters = [];
     this.gameStart = false;
-
+    this.startData();
   }
 
   startData() {
     this.characters = [];
     this.sortedCharacter = 0;
-    this.characterIdsList = [];
     this.points = 0;
     this.trys = 0;
     this.gameStart = false;
@@ -52,7 +49,7 @@ export class StartComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.getSuficientData();
+    this.start();
   }
 
 
@@ -65,11 +62,12 @@ export class StartComponent implements OnInit {
     this.choosenId = -1;
     this.answerWasMade = false;
     this.getSuficientData();
+    if (this.characters.length == 0) return;
     this.sortedCharacter = this.getRandomNumber(4);
     this.characters = this.selectAmountOfCharacters(4);
     this.gameStart = true;
-
   }
+
 
   choose_character(id: number): void {
     if (this.answerWasMade == true) return;
@@ -97,25 +95,39 @@ export class StartComponent implements OnInit {
 
 
   getSuficientData(): void {
-    this.user.getCharactersWithLetter(this.getRandomChar(), this.getRandomOrder()).subscribe(results => { this.data = results });
+    var actualIndex: number = 0;
+    var safe: number = 0;
+    do {
+      this.charApi.getCharactersWithLetter(this.getRandomChar(), this.getRandomOrder()).subscribe(results => { this.data = results });
+      actualIndex = this.addAllCharacters(actualIndex);
+      safe++;
+    } while (this.characters.length < 30 && safe < 5)
+    return;
+    this.charApi.getCharactersWithLetter(this.getRandomChar(), this.getRandomOrder()).subscribe(results => { this.data = results });
     this.characters = this.data.results;
-    //make it suficient
+  }
+
+  addAllCharacters(actualIndex: number): number {
+    if (this.data.results == undefined) return actualIndex;
+    for (let i = 0; i < this.data.results.length; i++) {
+      this.characters[actualIndex] = this.data.results[i];
+      actualIndex++;
+    }
+    return actualIndex;
   }
 
 
   selectAmountOfCharacters(quant: number) : Character[] {
-    var length: number = this.data.count;
-    var charList: Character[] = [];
-    for (let i = 0; i < this.characters.length; i++) {
-      charList[i] = this.data.results[i];
-    }
+    var lowList: Character[] = [];
+
+    console.log(this.characters);
 
     do {
-      charList = this.shuffle(charList);
-      charList = charList.slice(0, 4);
-    } while (this.thumbnailIsDefault(charList[this.sortedCharacter]));
+      this.characters = this.shuffle(this.characters);
+      lowList = this.characters.slice(0, 4);
+    } while (this.thumbnailIsDefault(lowList[this.sortedCharacter]));
 
-    return charList;
+    return lowList;
   }
 
 
@@ -126,12 +138,6 @@ export class StartComponent implements OnInit {
     } else {
       return false;
     }
-    /**
-    if (imageLocation.pathname == this.DEFAULT_IMAGE_URL)
-      return true;
-    else
-      return false;
-    **/
   }
 
   getRandomChar(): string {
