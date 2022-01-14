@@ -15,7 +15,8 @@ export class StartComponent implements OnInit {
   charApi: CharactersApiService;
   data: Data;
   characters: Character[] = [];
-  sortedCharacter: number;
+
+  sortedCharacter: number = 0;
   points: number = 0;
   trys: number = 0;
   choosenId: number = -1;
@@ -32,10 +33,6 @@ export class StartComponent implements OnInit {
   constructor(private _charApi: CharactersApiService) {
     this.charApi = _charApi;
     this.data = Data.prototype;
-    this.sortedCharacter = 0;
-    this.characters = [];
-    this.gameStart = false;
-    this.startData();
   }
 
   startData() {
@@ -61,12 +58,42 @@ export class StartComponent implements OnInit {
 
     this.choosenId = -1;
     this.answerWasMade = false;
+
     this.getSuficientData();
     if (this.characters.length == 0) return;
+
     this.sortedCharacter = this.getRandomNumber(4);
     this.characters = this.selectAmountOfCharacters(4);
     this.gameStart = true;
   }
+
+
+
+  getSuficientData(): void {
+    var actualIndex: number = 0;
+    var safe: number = 0;
+    do {
+      this.charApi.getCharactersWithLetter(
+        this.getRandomChar(), this.getRandomOrder(), this.getRandomOffset()
+      ).subscribe(results => { this.data = results });
+
+      actualIndex = this.addAllCharacters(actualIndex);
+      safe++;
+    } while (this.characters.length < 30 && safe < 5)
+  }
+
+
+  selectAmountOfCharacters(quant: number): Character[] {
+    var lowList: Character[] = [];
+
+    do {
+      this.characters = this.shuffle(this.characters);
+      lowList = this.characters.slice(0, 4);
+    } while (this.thumbnailIsDefault(lowList[this.sortedCharacter]));
+
+    return lowList;
+  }
+
 
 
   choose_character(id: number): void {
@@ -94,18 +121,6 @@ export class StartComponent implements OnInit {
   }
 
 
-  getSuficientData(): void {
-    var actualIndex: number = 0;
-    var safe: number = 0;
-    do {
-      this.charApi.getCharactersWithLetter(this.getRandomChar(), this.getRandomOrder()).subscribe(results => { this.data = results });
-      actualIndex = this.addAllCharacters(actualIndex);
-      safe++;
-    } while (this.characters.length < 30 && safe < 5)
-    return;
-    this.charApi.getCharactersWithLetter(this.getRandomChar(), this.getRandomOrder()).subscribe(results => { this.data = results });
-    this.characters = this.data.results;
-  }
 
   addAllCharacters(actualIndex: number): number {
     if (this.data.results == undefined) return actualIndex;
@@ -117,28 +132,16 @@ export class StartComponent implements OnInit {
   }
 
 
-  selectAmountOfCharacters(quant: number) : Character[] {
-    var lowList: Character[] = [];
-
-    console.log(this.characters);
-
-    do {
-      this.characters = this.shuffle(this.characters);
-      lowList = this.characters.slice(0, 4);
-    } while (this.thumbnailIsDefault(lowList[this.sortedCharacter]));
-
-    return lowList;
-  }
-
-
 
   thumbnailIsDefault(character: Character): boolean {
-    if (character.thumbnail.path == "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available") {
+    if (character.thumbnail.path == this.DEFAULT_IMAGE_URL) {
       return true;
     } else {
       return false;
     }
   }
+
+
 
   getRandomChar(): string {
     return this.ALPHABET[this.getRandomNumber(this.ALPHABET.length)];
@@ -148,8 +151,12 @@ export class StartComponent implements OnInit {
     return this.ORDERS[this.getRandomNumber(this.ORDERS.length)] + "name";
   }
 
+  getRandomOffset(): number {
+    return this.getRandomNumber(50);
+  }
+
   getRandomNumber(max: number): number {
-    return Math.floor(Math.random() * (max)); //+1 ?
+    return Math.floor(Math.random() * max);
   }
 
   shuffle(array: any[]): any[] {
@@ -163,28 +170,5 @@ export class StartComponent implements OnInit {
   counter(i: number) {
     return new Array(i);
   }
-
-
-  getBase64Image(img: any) {
-    var canvas = document.createElement("canvas");
-    canvas.width = img.width;
-    canvas.height = img.height;
-
-    var ctx = canvas.getContext("2d");
-    if (ctx == null) return;
-    ctx.drawImage(img, 0, 0);
-
-    var dataURL = canvas.toDataURL("image/png");
-    return dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
-  }
-
-  /*
-      while (this.size < 20 && safe < 5) {
-      var currentRequest: Observable<any> = this.user.getCharactersWithLetter(this.getRandomChar(), this.getRandomOrder());
-      currentRequest.subscribe(results => {
-        this.size = this.size + results.length;
-      })
-      safe += 1;
-   */
 
 }
