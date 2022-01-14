@@ -9,8 +9,8 @@ import { Character } from '../models/character.model';
 })
 export class CharactersApiService {
   SALT: string = "formyfreedom";
-  PUB_KEY: string = "a7b8bc8b9193ca7e618d237211930c64";
-  HASH: string = "c3c18dc6fd79807b7a28d003e6ccde9c";
+  PUB_KEY: string = "9a4b2e3b34e7f06577202aec17b86206";
+  HASH: string = "9a86812375a1e887231a05fb7c7465e3";
   CREDENTIAL: string = `&ts=${this.SALT}&apikey=${this.PUB_KEY}&hash=${this.HASH}`;
   FIRST_URL: string = "https://gateway.marvel.com/v1/public/characters?orderBy=";
   SECOND_URL: string = "&nameStartsWith=";
