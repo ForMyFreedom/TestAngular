@@ -22,6 +22,6 @@ export class CharactersApiService {
     return this.http.get<any>
       (
         this.FIRST_URL + order + this.SECOND_URL + char + this.CREDENTIAL
-      ).pipe(map((data: any) => data.data));
+      ).pipe(map((result: any) => result.data));
   }
 }

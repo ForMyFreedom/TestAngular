@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {CharactersApiService} from '../service/characters-api.service'
+import { CharactersApiService} from '../service/characters-api.service'
 import { combineAll, Observable, EMPTY, empty, of, combineLatest, toArray, take } from 'rxjs';
 import { Character } from '../models/character.model';
 import { Data } from '../models/data.model';
@@ -12,11 +12,10 @@ import { Output, EventEmitter } from '@angular/core';
 })
 export class StartComponent implements OnInit {
 
+  charApi: CharactersApiService;
   data: Data;
   characters: Character[] = [];
-  sortedCharacter: number = 0;
-  characterIdsList: number[] = [];
-  user: CharactersApiService;
+  sortedCharacter: number;
   points: number = 0;
   trys: number = 0;
   choosenId: number = -1;
@@ -28,27 +27,20 @@ export class StartComponent implements OnInit {
   GOAL = 3;
   ALPHABET = "abcdefghijklmnopqrstuvwxyz";
   ORDERS = ["", "-"];
-  DEFAULT_BLOCK = "http://i.annihil.us/u/prod/marvel/i/mg/";
-  BLOCKED_URIS = ["b/40/image_not_available", "c/e0/4ce59d3a80ff7", "i/mg/6/10/4c003937c9ba4", "i/mg/6/50/4dd531d26079c", "i/mg/6/60/535febc427605", "i/mg/b/c0/52b0d25c3dbb9", "i/mg/6/b0/4ed7bd3756650"];
-  //BLOCKED_URIS IS A TEMPORARY SOLUCTION [Issue #1]
-
-  constructor(private _user: CharactersApiService) {
-    this.user = _user;
+  DEFAULT_IMAGE_URL = "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available";
+  
+  constructor(private _charApi: CharactersApiService) {
+    this.charApi = _charApi;
     this.data = Data.prototype;
-    this.characterIdsList = [];
     this.sortedCharacter = 0;
     this.characters = [];
     this.gameStart = false;
-
-    for (let i = 0; i < this.BLOCKED_URIS.length; i++) {
-      this.BLOCKED_URIS[i] = this.DEFAULT_BLOCK + this.BLOCKED_URIS[i];
-    }
+    this.startData();
   }
 
   startData() {
     this.characters = [];
     this.sortedCharacter = 0;
-    this.characterIdsList = [];
     this.points = 0;
     this.trys = 0;
     this.gameStart = false;
@@ -57,7 +49,7 @@ export class StartComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.getSuficientData();
+    this.start();
   }
 
 
@@ -70,11 +62,12 @@ export class StartComponent implements OnInit {
     this.choosenId = -1;
     this.answerWasMade = false;
     this.getSuficientData();
-    this.characters = this.selectAmountOfCharacters(4);
+    if (this.characters.length == 0) return;
     this.sortedCharacter = this.getRandomNumber(4);
+    this.characters = this.selectAmountOfCharacters(4);
     this.gameStart = true;
-
   }
+
 
   choose_character(id: number): void {
     if (this.answerWasMade == true) return;
@@ -102,26 +95,50 @@ export class StartComponent implements OnInit {
 
 
   getSuficientData(): void {
-    this.user.getCharactersWithLetter(this.getRandomChar(), this.getRandomOrder()).subscribe(results => { this.data = results });
+    var actualIndex: number = 0;
+    var safe: number = 0;
+    do {
+      this.charApi.getCharactersWithLetter(this.getRandomChar(), this.getRandomOrder()).subscribe(results => { this.data = results });
+      actualIndex = this.addAllCharacters(actualIndex);
+      safe++;
+    } while (this.characters.length < 30 && safe < 5)
+    return;
+    this.charApi.getCharactersWithLetter(this.getRandomChar(), this.getRandomOrder()).subscribe(results => { this.data = results });
     this.characters = this.data.results;
-    //make it suficient
   }
+
+  addAllCharacters(actualIndex: number): number {
+    if (this.data.results == undefined) return actualIndex;
+    for (let i = 0; i < this.data.results.length; i++) {
+      this.characters[actualIndex] = this.data.results[i];
+      actualIndex++;
+    }
+    return actualIndex;
+  }
+
 
   selectAmountOfCharacters(quant: number) : Character[] {
-    var length: number = this.data.count;
+    var lowList: Character[] = [];
 
-    var allIds: Character[] = [];
-    for (let i = 0; i < this.characters.length; i++) {
-      allIds[i] = this.data.results[i];
-    }
+    console.log(this.characters);
 
-    allIds = this.shuffle(allIds);
-    allIds = allIds.slice(0, 4);
+    do {
+      this.characters = this.shuffle(this.characters);
+      lowList = this.characters.slice(0, 4);
+    } while (this.thumbnailIsDefault(lowList[this.sortedCharacter]));
 
-    return allIds;
+    return lowList;
   }
 
 
+
+  thumbnailIsDefault(character: Character): boolean {
+    if (character.thumbnail.path == "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available") {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   getRandomChar(): string {
     return this.ALPHABET[this.getRandomNumber(this.ALPHABET.length)];
@@ -147,6 +164,19 @@ export class StartComponent implements OnInit {
     return new Array(i);
   }
 
+
+  getBase64Image(img: any) {
+    var canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    var ctx = canvas.getContext("2d");
+    if (ctx == null) return;
+    ctx.drawImage(img, 0, 0);
+
+    var dataURL = canvas.toDataURL("image/png");
+    return dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+  }
 
   /*
       while (this.size < 20 && safe < 5) {
